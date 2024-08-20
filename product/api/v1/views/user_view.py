@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, response
 
 from api.v1.serializers.user_serializer import CustomUserSerializer
 
@@ -11,3 +11,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
     http_method_names = ["get", "head", "options"]
     permission_classes = (permissions.IsAdminUser,)
+
+    def retrieve(self, request, *args, **kwargs):
+        serializer = CustomUserSerializer(self.queryset)
+        return response.Response(serializer.data)

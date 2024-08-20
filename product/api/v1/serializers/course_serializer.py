@@ -3,7 +3,7 @@ from django.db.models import Avg, Count
 from rest_framework import serializers
 
 from courses.models import Course, Group, Lesson
-from users.models import Subscription
+from users.models import Subscription, CustomUser
 
 User = get_user_model()
 
@@ -50,9 +50,16 @@ class GroupSerializer(serializers.ModelSerializer):
     """Список групп."""
 
     # TODO Доп. задание
+    students = StudentSerializer(many=True)
+
 
     class Meta:
         model = Group
+        fields = (
+            'title',
+            'students',
+            'course',
+        )
 
 
 class CreateGroupSerializer(serializers.ModelSerializer):
@@ -63,6 +70,7 @@ class CreateGroupSerializer(serializers.ModelSerializer):
         fields = (
             'title',
             'course',
+            'students'
         )
 
 
@@ -87,19 +95,45 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_lessons_count(self, obj):
         """Количество уроков в курсе."""
-        # TODO Доп. задание
+        return len(obj.lessons.all())
 
     def get_students_count(self, obj):
         """Общее количество студентов на курсе."""
-        # TODO Доп. задание
+        return len(obj.students.all())
 
     def get_groups_filled_percent(self, obj):
         """Процент заполнения групп, если в группе максимум 30 чел.."""
-        # TODO Доп. задание
+        students_count = self.get_students_count(obj)
+        if students_count == 0:
+            return 0
+        
+        groups = self.get_groups(obj)
+        student_in_groups_percent = []
+        for group in groups:
+            student_in_groups_percent.append(len(group.students.all())/30*100)
+        middle = sum(student_in_groups_percent)/10
+        
+        return middle
+        
+        # TODO
 
     def get_demand_course_percent(self, obj):
         """Процент приобретения курса."""
-        # TODO Доп. задание
+        max_students = len(CustomUser.objects.all())
+        if max_students > 0:
+            demand_percent = (self.get_students_count(obj) / max_students) * 100
+        else:
+            demand_percent = 0
+        return demand_percent
+
+    def get_lessons(self, obj):
+        """Получение всех уроков курса"""
+        return obj.lessons.all()
+        
+    def get_groups(self, obj):
+        """Получение всех групп курса"""
+        return Group.objects.filter(course=obj)
+
 
     class Meta:
         model = Course
@@ -113,7 +147,7 @@ class CourseSerializer(serializers.ModelSerializer):
             'lessons',
             'demand_course_percent',
             'students_count',
-            'groups_filled_percent',
+            'groups_filled_percent'
         )
 
 
@@ -122,3 +156,9 @@ class CreateCourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
+        fields = (
+            'author',
+            'title',
+            'price',
+            'start_date'
+        )

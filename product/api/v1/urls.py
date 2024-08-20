@@ -1,4 +1,5 @@
 from django.urls import include, path
+from django.contrib import admin
 from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
                                    SpectacularSwaggerView)
 from rest_framework.routers import DefaultRouter
@@ -22,6 +23,7 @@ urlpatterns = [
     path("auth/", include('djoser.urls.authtoken')),
     # Создание нового пользователя api/v1/auth/users/
     # Авторизация пользователя     api/v1/auth/token/login/
+    path('admin/', admin.site.urls) 
 ]
 
 urlpatterns += [

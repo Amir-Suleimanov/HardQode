@@ -16,6 +16,29 @@ class CustomUser(AbstractUser):
         'last_name',
         'password'
     )
+    courses = models.ManyToManyField(
+        'courses.Course',
+        verbose_name='Курсы',
+        related_name='students',
+        blank=True
+    )
+
+    balance = models.ForeignKey(
+        'Balance',
+        verbose_name='Баланс',
+        on_delete=models.SET_NULL,
+        related_name='User',
+        null=True,
+        blank=True,
+    )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not hasattr(self, 'balance') or self.balance is None:
+            balance = Balance.objects.create(user=self)
+            self.balance = balance
+            super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -30,6 +53,17 @@ class Balance(models.Model):
     """Модель баланса пользователя."""
 
     # TODO
+    user = models.ForeignKey(
+        CustomUser,
+        verbose_name='Пользователь',
+        on_delete=models.CASCADE,
+        related_name='Balance',
+        null=True
+    )
+    cash = models.PositiveIntegerField(
+        verbose_name='Денежные средства',
+        default=1000,
+    )
 
     class Meta:
         verbose_name = 'Баланс'
